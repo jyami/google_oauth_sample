@@ -9,9 +9,12 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/calendar/v3"
+	"google.golang.org/api/option"
 )
 
 var (
@@ -24,7 +27,7 @@ func init() {
 		RedirectURL:  "http://localhost:8080/auth/google/callback",
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"},
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/calendar.events.readonly"},
 		Endpoint:     google.Endpoint,
 	}
 }
@@ -53,6 +56,31 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("GoogleCallbackHandler %+w", userInfo)
 	log.Println("GoogleCallbackHandler %+w", userInfo["email"].(string))
 	log.Println("GoogleCallbackHandler %+w", userInfo["name"].(string))
+
+	client := googleOauthConfig.Client(r.Context(), token)
+	srv, err := calendar.NewService(r.Context(), option.WithHTTPClient(client))
+	if err != nil {
+		log.Fatalf("Unable to retrieve Calendar client: %v", err)
+	}
+
+	t := time.Now().Format(time.RFC3339)
+	events, err := srv.Events.List("primary").ShowDeleted(false).
+		SingleEvents(true).TimeMin(t).MaxResults(10).OrderBy("startTime").Do()
+	if err != nil {
+		log.Fatalf("Unable to retrieve next ten of the user's events: %v", err)
+	}
+	fmt.Println("Upcoming events:")
+	if len(events.Items) == 0 {
+		fmt.Println("No upcoming events found.")
+	} else {
+		for _, item := range events.Items {
+			date := item.Start.DateTime
+			if date == "" {
+				date = item.Start.Date
+			}
+			fmt.Printf("%v (%v)\n", item.Summary, date)
+		}
+	}
 
 	u, _ := url.Parse("/success")
 	q := u.Query()
