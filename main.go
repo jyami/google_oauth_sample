@@ -28,11 +28,14 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 func successHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("email:%+w", r.URL.Query().Get("email"))
+	log.Println("email:%+w", r.URL.Query().Get("name"))
 
 	data := struct {
 		Email string
+		Name  string
 	}{
 		Email: r.URL.Query().Get("email"),
+		Name:  r.URL.Query().Get("name"),
 	}
 	log.Println("data:%+w", data)
 	templates.ExecuteTemplate(w, "success.html", data)

@@ -24,7 +24,7 @@ func init() {
 		RedirectURL:  "http://localhost:8080/auth/google/callback",
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"},
 		Endpoint:     google.Endpoint,
 	}
 }
@@ -50,11 +50,14 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
+	log.Println("GoogleCallbackHandler %+w", userInfo)
 	log.Println("GoogleCallbackHandler %+w", userInfo["email"].(string))
+	log.Println("GoogleCallbackHandler %+w", userInfo["name"].(string))
 
 	u, _ := url.Parse("/success")
 	q := u.Query()
 	q.Set("email", userInfo["email"].(string))
+	q.Set("name", userInfo["name"].(string))
 	u.RawQuery = q.Encode()
 	log.Println("path %+w", u.String())
 
