@@ -1,1 +1,4 @@
-GOOGLE_CLIENT_ID=<gogoogle_client_id> GOOGLE_CLIENT_SECRET=<google_client_secret> go run main.go
+GOOGLE_CLIENT_ID=<gogoogle_client_id>\
+ GOOGLE_CLIENT_SECRET=<google_client_secret>\
+ GOOGLECALENDER_ID=<googlecalender_id>\
+ go run main.go
